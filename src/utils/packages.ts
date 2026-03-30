@@ -1,11 +1,10 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { getPackagesDir, getRegistryDir, ensureOxDirs } from './config.js';
-
-const PACKAGE_NAME_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9-]*$/;
+import { PACKAGE_NAME_REGEX, PACKAGE_NAME_MAX_LENGTH } from './constants.js';
 
 export function validatePackageName(name: string): boolean {
-  return PACKAGE_NAME_REGEX.test(name) && name.length <= 214;
+  return PACKAGE_NAME_REGEX.test(name) && name.length <= PACKAGE_NAME_MAX_LENGTH;
 }
 
 export interface InstalledPackage {
