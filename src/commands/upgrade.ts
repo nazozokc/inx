@@ -1,8 +1,7 @@
 import { Command } from 'commander';
 import { listInstalledPackages, installPackage } from '../utils/packages.js';
 import { updateRegistry, getTags, checkoutTag } from '../utils/registry.js';
-
-const VERSION_TAG_REGEX = /^v?\d+\.\d+\.\d+$/;
+import { VERSION_TAG_REGEX } from '../utils/constants.js';
 
 function compareVersions(a: string, b: string): number {
   const parseVersion = (v: string) => {
@@ -55,17 +54,18 @@ export const upgrade = new Command()
       await checkoutTag(latestTag);
 
       console.log(`Upgrading ${packages.length} package(s)...`);
-      let hasErrors = false;
-      for (const pkg of packages) {
-        try {
-          await installPackage(pkg.name, true);
-        } catch (error) {
-          console.error(`Failed to upgrade ${pkg.name}: ${error}`);
-          hasErrors = true;
+      const results = await Promise.allSettled(
+        packages.map(pkg => installPackage(pkg.name, true))
+      );
+
+      const failedIndices = results
+        .map((result, index) => result.status === 'rejected' ? index : -1)
+        .filter(i => i !== -1);
+
+      if (failedIndices.length > 0) {
+        for (const index of failedIndices) {
+          console.error(`Failed to upgrade ${packages[index].name}`);
         }
-      }
-      
-      if (hasErrors) {
         console.log('Upgrade completed with errors');
         process.exit(1);
       }

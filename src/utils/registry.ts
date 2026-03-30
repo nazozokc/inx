@@ -59,7 +59,7 @@ export async function updateRegistry(): Promise<void> {
     console.log('Pulling latest changes...');
     await git.pull();
   } catch (error) {
-    throw new Error(`Failed to update registry: ${error}`);
+    throw new Error(`Failed to update registry: ${error}`, { cause: error });
   }
 }
 
@@ -75,7 +75,7 @@ export async function getTags(): Promise<string[]> {
   }
 }
 
-const TAG_NAME_REGEX = /^[a-zA-Z0-9._-]+$/;
+import { TAG_NAME_REGEX } from './constants.js';
 
 function validateTagName(tag: string): boolean {
   return TAG_NAME_REGEX.test(tag) && !tag.includes('..') && !tag.startsWith('-');
@@ -92,6 +92,6 @@ export async function checkoutTag(tag: string): Promise<void> {
   try {
     await git.checkout(tag);
   } catch (error) {
-    throw new Error(`Failed to checkout tag ${tag}: ${error}`);
+    throw new Error(`Failed to checkout tag ${tag}: ${error}`, { cause: error });
   }
 }

@@ -1,14 +1,11 @@
 import os from 'os';
 import path from 'path';
 import fs from 'fs/promises';
+import { DEFAULT_CONFIG } from './constants.js';
 
 export interface Config {
   registry: string;
 }
-
-const DEFAULT_CONFIG: Config = {
-  registry: 'https://github.com/nazozokc/ox',
-};
 
 export function getOxDir(): string {
   return path.join(os.homedir(), '.ox');
@@ -34,12 +31,6 @@ export async function loadConfig(): Promise<Config> {
   } catch {
     return DEFAULT_CONFIG;
   }
-}
-
-export async function saveConfig(config: Config): Promise<void> {
-  const configPath = getConfigPath();
-  await fs.mkdir(path.dirname(configPath), { recursive: true });
-  await fs.writeFile(configPath, JSON.stringify(config, null, 2));
 }
 
 export async function ensureOxDirs(): Promise<void> {
