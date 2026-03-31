@@ -3,6 +3,8 @@ import { listInstalledPackages, installPackage } from '../utils/packages.js';
 import { updateRegistry, getTags, checkoutTag } from '../utils/registry.js';
 import { VERSION_TAG_REGEX } from '../utils/constants.js';
 
+// NOTE: Only VERSION_TAG_REGEX-matched tags are passed here.
+// Pre-release identifiers (e.g. v1.0.0-rc.1) are excluded upstream.
 function compareVersions(a: string, b: string): number {
   const parseVersion = (v: string) => {
     const cleaned = v.replace(/^v/, '').replace(/[^\d.]/g, '');
