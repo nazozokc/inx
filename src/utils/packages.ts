@@ -26,6 +26,10 @@ export async function listInstalledPackages(): Promise<InstalledPackage[]> {
   try {
     const entries = await fs.readdir(packagesDir, { withFileTypes: true });
     for (const entry of entries) {
+      if (!entry.isDirectory() && !entry.isFile()) {
+        console.warn(`Warning: Skipping non-regular file '${entry.name}'`);
+        continue;
+      }
       if (entry.isDirectory()) {
         const pkgJsonPath = path.join(packagesDir, entry.name, 'package.json');
         try {
@@ -125,6 +129,12 @@ export async function installPackage(name: string, force = false): Promise<void>
 
   try {
     await fs.cp(sourceDir, destDir, { recursive: true });
+
+    if (!(await validateNoSymlinks(destDir))) {
+      await fs.rm(destDir, { recursive: true, force: true });
+      throw new Error(`Installed '${name}' contains invalid symbolic links`);
+    }
+
     console.log(`Installed '${name}'`);
   } catch (error) {
     try {
@@ -137,6 +147,10 @@ export async function installPackage(name: string, force = false): Promise<void>
 }
 
 export async function uninstallPackage(name: string): Promise<void> {
+  if (!validatePackageName(name)) {
+    throw new Error(`Invalid package name '${name}'. Use only letters, numbers, and hyphens.`);
+  }
+
   const destDir = path.join(getPackagesDir(), name);
 
   try {

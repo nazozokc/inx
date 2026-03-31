@@ -3,7 +3,7 @@ import fs from 'fs/promises';
 import { getRegistryDir, loadConfig, ensureOxDirs } from './config.js';
 
 function getGit(workingDir?: string): SimpleGit {
-  return simpleGit(workingDir);
+  return simpleGit(workingDir, { timeout: { block: 30000 } });
 }
 
 export async function initRegistry(): Promise<void> {

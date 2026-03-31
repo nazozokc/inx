@@ -23,5 +23,7 @@ export const TAG_NAME_REGEX = /^[a-zA-Z0-9._-]+$/;
 
 /**
  * Regular expression for validating version tags (e.g., v1.0.0, 1.0.0)
+ * NOTE: Only VERSION_TAG_REGEX-matched tags are passed to compareVersions.
+ * Pre-release identifiers (e.g. v1.0.0-rc.1) are excluded upstream.
  */
 export const VERSION_TAG_REGEX = /^v?\d+\.\d+\.\d+$/;

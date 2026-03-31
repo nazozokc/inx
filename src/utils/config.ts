@@ -23,11 +23,24 @@ export function getPackagesDir(): string {
   return path.join(getOxDir(), 'packages');
 }
 
+export function validateRegistryUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' || parsed.protocol === 'ssh:';
+  } catch {
+    return false;
+  }
+}
+
 export async function loadConfig(): Promise<Config> {
   const configPath = getConfigPath();
   try {
     const data = await fs.readFile(configPath, 'utf-8');
-    return { ...DEFAULT_CONFIG, ...JSON.parse(data) };
+    const config = { ...DEFAULT_CONFIG, ...JSON.parse(data) };
+    if (!validateRegistryUrl(config.registry)) {
+      throw new Error(`Invalid registry URL: ${config.registry}. Only https: and ssh: protocols are allowed.`);
+    }
+    return config;
   } catch {
     return DEFAULT_CONFIG;
   }
