@@ -1,5 +1,6 @@
 import { simpleGit, SimpleGit } from 'simple-git';
 import fs from 'fs/promises';
+import { TAG_NAME_REGEX } from './constants.js';
 import { getRegistryDir, loadConfig, ensureOxDirs } from './config.js';
 
 function getGit(workingDir?: string): SimpleGit {
@@ -74,8 +75,6 @@ export async function getTags(): Promise<string[]> {
     return [];
   }
 }
-
-import { TAG_NAME_REGEX } from './constants.js';
 
 function validateTagName(tag: string): boolean {
   return TAG_NAME_REGEX.test(tag) && !tag.includes('..') && !tag.startsWith('-');
