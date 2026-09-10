@@ -1,11 +1,12 @@
 use anyhow::{Context, Result};
-use serde::Deserialize;
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use crate::utils::config::{ensure_inx_dirs, get_packages_dir, get_registry_dir};
+use crate::utils::config::{get_inx_dir, get_packages_dir, get_registry_dir};
 use crate::utils::constants::validate_package_name;
+use crate::utils::manifest::PackageManifest;
+use crate::utils::scripts::run_script;
 
 /// A package installed in the user's inx directory.
 #[derive(Debug)]
@@ -16,31 +17,7 @@ pub struct InstalledPackage {
     pub path: PathBuf,
 }
 
-/// Minimal package.json structure needed by inx.
-#[derive(Debug, Deserialize)]
-struct PackageJson {
-    name: String,
-    version: String,
-}
-
-impl PackageJson {
-    fn from_dir(dir: &Path) -> Result<Self> {
-        let pkg_json_path = dir.join("package.json");
-        let data = fs::read_to_string(&pkg_json_path)
-            .with_context(|| format!("Failed to read {}", pkg_json_path.display()))?;
-        let pkg: PackageJson = serde_json::from_str(&data)
-            .with_context(|| format!("Failed to parse {}", pkg_json_path.display()))?;
-        if pkg.name.is_empty() || pkg.version.is_empty() {
-            anyhow::bail!(
-                "Invalid package.json in '{}': missing name or version",
-                dir.display()
-            );
-        }
-        Ok(pkg)
-    }
-}
-
-/// List all installed packages by scanning ~/.inx/packages/*/package.json.
+/// List all installed packages by scanning ~/.inx/packages/*/manifest.
 pub fn list_installed_packages() -> Result<Vec<InstalledPackage>> {
     let packages_dir = get_packages_dir()?;
     let mut packages = Vec::new();
@@ -61,16 +38,24 @@ pub fn list_installed_packages() -> Result<Vec<InstalledPackage>> {
         };
         if file_type.is_dir() {
             let dir = entry.path();
-            match PackageJson::from_dir(&dir) {
-                Ok(pkg) => packages.push(InstalledPackage {
-                    name: pkg.name,
-                    version: pkg.version,
+            match PackageManifest::from_dir(&dir) {
+                Ok(manifest) => packages.push(InstalledPackage {
+                    name: manifest.package.name,
+                    version: manifest.package.version,
                     path: dir,
                 }),
-                Err(error) => eprintln!("Warning: {}", error),
+                Err(error) => eprintln!(
+                    "{} {}",
+                    crate::utils::colors::Colors::warning("Warning:"),
+                    error
+                ),
             }
         } else if !file_type.is_file() {
-            eprintln!("Warning: Skipping non-regular file '{}'", entry.file_name().to_string_lossy());
+            eprintln!(
+                "{} Skipping non-regular file '{}'",
+                crate::utils::colors::Colors::warning("Warning:"),
+                entry.file_name().to_string_lossy()
+            );
         }
     }
 
@@ -170,7 +155,10 @@ fn copy_recursively(src: &Path, dst: &Path) -> io::Result<()> {
 /// - Verifies no malicious symlinks exist in the source (and again after copy).
 /// - When `force` is true, removes an already-installed copy beforehand.
 /// - Cleans up the destination on any failure.
-pub fn install_package(name: &str, force: bool) -> Result<()> {
+///
+/// Returns `Ok(true)` if the package was actually installed and
+/// `Ok(false)` if it was already installed and skipped.
+pub fn install_package(name: &str, force: bool) -> Result<bool> {
     if !validate_package_name(name) {
         anyhow::bail!(
             "Invalid package name '{name}'. Use only letters, numbers, and hyphens."
@@ -190,12 +178,17 @@ pub fn install_package(name: &str, force: bool) -> Result<()> {
         anyhow::bail!("Package '{name}' contains invalid symbolic links");
     }
 
-    ensure_inx_dirs()?;
+    fs::create_dir_all(get_packages_dir()?)?;
 
     if dest_dir.exists() {
         if !force {
-            println!("Package '{name}' is already installed");
-            return Ok(());
+            println!(
+                "  {} {} {}",
+                crate::utils::colors::Colors::dim("→"),
+                crate::utils::colors::Colors::accent(name),
+                crate::utils::colors::Colors::dim("(already installed, skipping)")
+            );
+            return Ok(false);
         }
         fs::remove_dir_all(&dest_dir)
             .with_context(|| format!("Failed to remove {}", dest_dir.display()))?;
@@ -209,8 +202,18 @@ pub fn install_package(name: &str, force: bool) -> Result<()> {
                 let _ = fs::remove_dir_all(&dest_dir);
                 anyhow::bail!("Installed '{name}' contains invalid symbolic links");
             }
-            println!("Installed '{name}'");
-            Ok(())
+            println!(
+                "  {} {} {} v{}",
+                crate::utils::colors::Colors::dim("→"),
+                crate::utils::colors::Colors::accent(name),
+                crate::utils::colors::Colors::success("installed"),
+                crate::utils::colors::Colors::accent(
+                    &PackageManifest::from_dir(&source_dir)
+                        .map(|m| m.package.version)
+                        .unwrap_or_default()
+                )
+            );
+            Ok(true)
         }
         Err(error) => {
             let _ = fs::remove_dir_all(&dest_dir);
@@ -220,7 +223,6 @@ pub fn install_package(name: &str, force: bool) -> Result<()> {
 }
 
 /// Remove an installed package.
-#[allow(dead_code)] // no CLI command yet, ported from the TypeScript API surface
 pub fn uninstall_package(name: &str) -> Result<()> {
     if !validate_package_name(name) {
         anyhow::bail!(
@@ -234,8 +236,31 @@ pub fn uninstall_package(name: &str) -> Result<()> {
         anyhow::bail!("Package '{name}' is not installed");
     }
 
+    // Run pre-uninstall hook
+    let manifest = PackageManifest::from_dir(&dest_dir);
+    if let Ok(m) = &manifest {
+        if let Some(script) = &m.scripts.pre_uninstall {
+            run_script(script, name, "pre-uninstall", &dest_dir)?;
+        }
+    }
+
     fs::remove_dir_all(&dest_dir)
         .with_context(|| format!("Failed to remove {}", dest_dir.display()))?;
-    println!("Uninstalled '{name}'");
+
+    // Run post-uninstall hook from the cached manifest
+    if let Ok(m) = manifest {
+        if let Some(script) = &m.scripts.post_uninstall {
+            // No dir exists anymore; run in the packages dir
+            let parent = get_packages_dir()?;
+            run_script(script, name, "post-uninstall", &parent)?;
+        }
+    }
+
     Ok(())
+}
+
+/// Get the inx directory, mainly for the registry clone.
+#[allow(dead_code)]
+pub fn get_inx_dir_public() -> Result<PathBuf> {
+    get_inx_dir()
 }

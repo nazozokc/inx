@@ -5,6 +5,7 @@ use std::path::Path;
 
 use crate::utils::config::{ensure_inx_dirs, get_registry_dir, load_config};
 use crate::utils::constants::TAG_NAME_REGEX;
+use crate::utils::retry::with_retry;
 
 /// Initialize the registry: clone if missing, pull if already present.
 pub fn init_registry() -> Result<()> {
@@ -25,9 +26,11 @@ pub fn init_registry() -> Result<()> {
         } else {
             format!("{}.git", config.registry)
         };
-        let _ = fs::remove_dir_all(&registry_dir);
-        git2::Repository::clone(&repo_url, &registry_dir)
-            .with_context(|| format!("Failed to clone registry from {}", repo_url))?;
+        with_retry(|| {
+            let _ = fs::remove_dir_all(&registry_dir);
+            git2::Repository::clone(&repo_url, &registry_dir)
+                .with_context(|| format!("Failed to clone registry from {}", repo_url))
+        })?;
     }
     Ok(())
 }
@@ -71,17 +74,15 @@ pub fn checkout_tag(tag: &str) -> Result<()> {
     let repo = Repository::open(&registry_dir)
         .with_context(|| format!("Failed to open repository: {}", registry_dir.display()))?;
 
-    let tag_oid = repo
+    // Resolve the tag, peeling annotated tag objects to their commit.
+    let object = repo
         .revparse_single(tag)
         .with_context(|| format!("Failed to resolve tag '{tag}'"))?
-        .id();
-
-    let mut object = repo
-        .find_object(tag_oid, Some(git2::ObjectType::Commit))
-        .with_context(|| format!("Failed to find object for tag '{tag}'"))?;
+        .peel(git2::ObjectType::Commit)
+        .with_context(|| format!("Failed to peel tag '{tag}' to a commit"))?;
 
     let mut checkout_builder = git2::build::CheckoutBuilder::new();
-    repo.reset(&mut object, git2::ResetType::Hard, Some(&mut checkout_builder))
+    repo.reset(&object, git2::ResetType::Hard, Some(&mut checkout_builder))
         .with_context(|| format!("Failed to checkout tag '{tag}'"))?;
     Ok(())
 }
@@ -96,16 +97,18 @@ fn pull(dir: &Path) -> Result<()> {
     let mut remote = repo
         .find_remote("origin")
         .context("Failed to find remote 'origin'")?;
-    remote
-        .fetch(
-            &[
-                "+refs/heads/main:refs/remotes/origin/main",
-                "+refs/heads/master:refs/remotes/origin/master",
-            ],
-            None,
-            None,
-        )
-        .context("Failed to fetch from origin")?;
+    with_retry(|| {
+        remote
+            .fetch(
+                &[
+                    "+refs/heads/main:refs/remotes/origin/main",
+                    "+refs/heads/master:refs/remotes/origin/master",
+                ],
+                None,
+                None,
+            )
+            .context("Failed to fetch from origin")
+    })?;
 
     let head = repo.head().context("Failed to read HEAD")?;
     let target_oid = if head.is_branch() {

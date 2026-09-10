@@ -1,5 +1,30 @@
 # Changelog
 
+## v2.0.0 (2026-09-10)
+
+### ✨ Features
+
+- Add `inx list` — show installed packages with versions
+- Add `inx remove` — uninstall a package (alias: `uninstall`, `rm`)
+- Add `inx info` — show package details (manifest, deps, scripts)
+- Add `inx search` — GitHub API repository search
+- Add `inx verify` — checksum verification against the lock file
+- Add `inx.toml` manifest format with `[package]`, `[dependencies]`, `[scripts]`
+- Automatic dependency resolution (topological order, cycle detection)
+- Parallel installation of independent sibling packages
+- Pre/post install & uninstall script hooks
+- Lock file with SHA-256 checksums (`~/.inx/lock/inx.lock`)
+- Retry with exponential backoff for network operations (clone/fetch/API)
+- Progress bar during installation
+- Colored terminal output with icons
+- `--force` flag for `inx install`
+- Backward compatibility with legacy `package.json` manifests
+
+### 🐛 Bug Fixes
+
+- Checkout annotated git tags correctly during `upgrade` (peel to commit)
+- Skip script hooks when a package is already installed
+
 ## v1.0.0 (2026-03-26)
 
 ### ✨ Features
