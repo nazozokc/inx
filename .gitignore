@@ -1,8 +1,5 @@
-node_modules/
-dist/
+/target
 .ox/
 *.log
 .DS_Store
-*.tsbuildinfo
 .env
-coverage/

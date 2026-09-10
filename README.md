@@ -5,8 +5,13 @@ A simple package manager for local packages.
 ## Installation
 
 ```bash
-pnpm install
-pnpm build
+cargo build --release
+```
+
+The binary is generated at `target/release/ox`. To use it as `ox`, add it to your `PATH`:
+
+```bash
+cp target/release/ox ~/.local/bin/ox
 ```
 
 ## Usage
@@ -33,14 +38,29 @@ Packages are fetched from the remote repository at [https://github.com/nazozokc/
 
 ```bash
 # Build
-pnpm build
+cargo build
 
 # Run in development mode
-pnpm dev
+cargo run
+
+# Test
+cargo test
 ```
 
 ## Tech Stack
 
-- TypeScript
-- Node.js
-- pnpm
+- Rust
+- clap (CLI)
+- git2 (Git operations)
+
+## Configuration
+
+The registry URL can be changed via `~/.ox/config.json`:
+
+```json
+{
+  "registry": "https://github.com/yourname/yourrepo"
+}
+```
+
+Only `https:` and `ssh:` protocols are allowed.

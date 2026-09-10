@@ -10,8 +10,8 @@ ox upgrade ← アップグレード
 パッケージの参照は、リモートレポジトリ内(現時点ではhttps://github.com/nazozokc/ox/tree/main/packages)packages/から参照するようにしたいです。
 
 # 使うツール
-pnpm
-nodejs
+cargo
+rustc
 
 # 言語
-typescript
+rust
