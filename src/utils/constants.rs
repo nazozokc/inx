@@ -2,7 +2,7 @@ use regex::Regex;
 use std::sync::LazyLock;
 
 /// Default registry URL
-pub const DEFAULT_REGISTRY: &str = "https://github.com/nazozokc/ox";
+pub const DEFAULT_REGISTRY: &str = "https://github.com/nazozokc/inx";
 
 /// Maximum length of a package name
 pub const PACKAGE_NAME_MAX_LENGTH: usize = 214;

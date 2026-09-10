@@ -4,10 +4,10 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use crate::utils::config::{ensure_ox_dirs, get_packages_dir, get_registry_dir};
+use crate::utils::config::{ensure_inx_dirs, get_packages_dir, get_registry_dir};
 use crate::utils::constants::validate_package_name;
 
-/// A package installed in the user's ox directory.
+/// A package installed in the user's inx directory.
 #[derive(Debug)]
 #[allow(dead_code)] // part of the public API surface, used by future commands
 pub struct InstalledPackage {
@@ -16,7 +16,7 @@ pub struct InstalledPackage {
     pub path: PathBuf,
 }
 
-/// Minimal package.json structure needed by ox.
+/// Minimal package.json structure needed by inx.
 #[derive(Debug, Deserialize)]
 struct PackageJson {
     name: String,
@@ -40,7 +40,7 @@ impl PackageJson {
     }
 }
 
-/// List all installed packages by scanning ~/.ox/packages/*/package.json.
+/// List all installed packages by scanning ~/.inx/packages/*/package.json.
 pub fn list_installed_packages() -> Result<Vec<InstalledPackage>> {
     let packages_dir = get_packages_dir()?;
     let mut packages = Vec::new();
@@ -164,7 +164,7 @@ fn copy_recursively(src: &Path, dst: &Path) -> io::Result<()> {
     Ok(())
 }
 
-/// Install a package from the registry to ~/.ox/packages/.
+/// Install a package from the registry to ~/.inx/packages/.
 ///
 /// - Validates the package name and presence in the registry.
 /// - Verifies no malicious symlinks exist in the source (and again after copy).
@@ -190,7 +190,7 @@ pub fn install_package(name: &str, force: bool) -> Result<()> {
         anyhow::bail!("Package '{name}' contains invalid symbolic links");
     }
 
-    ensure_ox_dirs()?;
+    ensure_inx_dirs()?;
 
     if dest_dir.exists() {
         if !force {

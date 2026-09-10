@@ -33,7 +33,7 @@ fn compare_versions(a: &str, b: &str) -> std::cmp::Ordering {
     std::cmp::Ordering::Equal
 }
 
-/// Run `ox upgrade`.
+/// Run `inx upgrade`.
 pub fn run() -> Result<()> {
     update_registry()?;
 

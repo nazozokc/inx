@@ -4,11 +4,11 @@ use clap::{Parser, Subcommand};
 mod commands;
 mod utils;
 
-use utils::config::ensure_ox_dirs;
+use utils::config::ensure_inx_dirs;
 
 /// A simple package manager for local packages.
 #[derive(Parser)]
-#[command(name = "ox", version, about)]
+#[command(name = "inx", version, about)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -31,7 +31,7 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     // Mirror the TypeScript preAction hook: ensure directories exist for every command.
-    ensure_ox_dirs()?;
+    ensure_inx_dirs()?;
 
     match cli.command {
         Commands::Install { pkgname } => commands::install::run(&pkgname),

@@ -1,4 +1,4 @@
-# ox
+# inx
 
 A simple package manager for local packages.
 
@@ -8,31 +8,31 @@ A simple package manager for local packages.
 cargo build --release
 ```
 
-The binary is generated at `target/release/ox`. To use it as `ox`, add it to your `PATH`:
+The binary is generated at `target/release/inx`. To use it as `inx`, add it to your `PATH`:
 
 ```bash
-cp target/release/ox ~/.local/bin/ox
+cp target/release/inx ~/.local/bin/inx
 ```
 
 ## Usage
 
 ```bash
 # Install a package
-ox install <pkgname>
+inx install <pkgname>
 
 # Update packages
-ox update
+inx update
 
 # Upgrade packages
-ox upgrade
+inx upgrade
 ```
 
 ## Storage Location
 
-- **Unix:** `~/.ox`
-- **Windows:** `C:\Users\<username>\.ox`
+- **Unix:** `~/.inx`
+- **Windows:** `C:\Users\<username>\.inx`
 
-Packages are fetched from the remote repository at [https://github.com/nazozokc/ox/tree/main/packages](https://github.com/nazozokc/ox/tree/main/packages).
+Packages are fetched from the remote repository at [https://github.com/nazozokc/inx/tree/main/packages](https://github.com/nazozokc/inx/tree/main/packages).
 
 ## Development
 
@@ -55,7 +55,7 @@ cargo test
 
 ## Configuration
 
-The registry URL can be changed via `~/.ox/config.json`:
+The registry URL can be changed via `~/.inx/config.json`:
 
 ```json
 {

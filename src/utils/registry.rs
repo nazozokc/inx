@@ -3,7 +3,7 @@ use git2::Repository;
 use std::fs;
 use std::path::Path;
 
-use crate::utils::config::{ensure_ox_dirs, get_registry_dir, load_config};
+use crate::utils::config::{ensure_inx_dirs, get_registry_dir, load_config};
 use crate::utils::constants::TAG_NAME_REGEX;
 
 /// Initialize the registry: clone if missing, pull if already present.
@@ -11,7 +11,7 @@ pub fn init_registry() -> Result<()> {
     let registry_dir = get_registry_dir()?;
     let config = load_config()?;
 
-    ensure_ox_dirs()?;
+    ensure_inx_dirs()?;
 
     let is_repo = Repository::open(&registry_dir).is_ok();
 

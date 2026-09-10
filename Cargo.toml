@@ -1,12 +1,12 @@
 [package]
-name = "ox"
+name = "inx"
 version = "1.0.0"
 edition = "2021"
 description = "A simple package manager for local packages"
 license = "MIT"
 
 [[bin]]
-name = "ox"
+name = "inx"
 path = "src/main.rs"
 
 [dependencies]

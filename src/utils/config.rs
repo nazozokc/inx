@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 use crate::utils::constants::DEFAULT_REGISTRY;
 
-/// Configuration for ox.
+/// Configuration for inx.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
     pub registry: String,
@@ -19,25 +19,25 @@ impl Default for Config {
     }
 }
 
-/// Get the ox directory (~/.ox).
-pub fn get_ox_dir() -> Result<PathBuf> {
+/// Get the inx directory (~/.inx).
+pub fn get_inx_dir() -> Result<PathBuf> {
     let home = dirs::home_dir().ok_or_else(|| anyhow::anyhow!("Could not determine home directory"))?;
-    Ok(home.join(".ox"))
+    Ok(home.join(".inx"))
 }
 
-/// Get the config file path (~/.ox/config.json).
+/// Get the config file path (~/.inx/config.json).
 pub fn get_config_path() -> Result<PathBuf> {
-    Ok(get_ox_dir()?.join("config.json"))
+    Ok(get_inx_dir()?.join("config.json"))
 }
 
-/// Get the registry directory (~/.ox/registry).
+/// Get the registry directory (~/.inx/registry).
 pub fn get_registry_dir() -> Result<PathBuf> {
-    Ok(get_ox_dir()?.join("registry"))
+    Ok(get_inx_dir()?.join("registry"))
 }
 
-/// Get the packages directory (~/.ox/packages).
+/// Get the packages directory (~/.inx/packages).
 pub fn get_packages_dir() -> Result<PathBuf> {
-    Ok(get_ox_dir()?.join("packages"))
+    Ok(get_inx_dir()?.join("packages"))
 }
 
 /// Validate a registry URL. Only https: and ssh: protocols are allowed.
@@ -68,9 +68,9 @@ pub fn load_config() -> Result<Config> {
     }
 }
 
-/// Ensure the ox directories exist.
-pub fn ensure_ox_dirs() -> Result<()> {
-    fs::create_dir_all(get_ox_dir()?)?;
+/// Ensure the inx directories exist.
+pub fn ensure_inx_dirs() -> Result<()> {
+    fs::create_dir_all(get_inx_dir()?)?;
     fs::create_dir_all(get_packages_dir()?)?;
     Ok(())
 }

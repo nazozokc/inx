@@ -4,7 +4,7 @@ use crate::utils::constants::validate_package_name;
 use crate::utils::packages::{get_available_packages, install_package};
 use crate::utils::registry::init_registry;
 
-/// Run `ox install <pkgname>`.
+/// Run `inx install <pkgname>`.
 pub fn run(pkgname: &str) -> Result<()> {
     if !validate_package_name(pkgname) {
         anyhow::bail!(
