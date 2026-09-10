@@ -1,4 +1,11 @@
+pub mod colors;
 pub mod config;
 pub mod constants;
+pub mod github;
+pub mod lock;
+pub mod manifest;
 pub mod packages;
 pub mod registry;
+pub mod resolver;
+pub mod retry;
+pub mod scripts;

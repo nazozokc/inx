@@ -4,6 +4,9 @@ use std::sync::LazyLock;
 /// Default registry URL
 pub const DEFAULT_REGISTRY: &str = "https://github.com/nazozokc/inx";
 
+/// Default GitHub org used for package search
+pub const DEFAULT_REGISTRY_ORG: &str = "nazozokc";
+
 /// Maximum length of a package name
 pub const PACKAGE_NAME_MAX_LENGTH: usize = 214;
 
